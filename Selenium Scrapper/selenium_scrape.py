@@ -11,7 +11,7 @@ import psycopg2
 class crawler:
     def __init__(self,directory,user,password,host,port,database):
         self.company_list = self.open_name(directory)
-        self.date = datetime.today().weekday()
+        self.date = datetime.today().weekday() # Monday is 0, sunday is 6
         self.cursor = self.database(user,password,host,port,database)
 
     def database(self,user,password,host,port,database):
@@ -47,13 +47,13 @@ class crawler:
                         continue
                     soup = BeautifulSoup(html, 'lxml')
                     cur_price = [entry.text for entry in soup.find_all('span', {'class':'Trsdu(0.3s) Fw(b) Fz(36px) Mb(-4px) D(ib)'})]
-                    data.append([ticker,self.date, datetime.today().strftime('%Y-%m-%d-%H:%M'),float(cur_price[0])])
+                    data.append([ticker,self.date, datetime.today().strftime('%Y-%m-%d %H:%M:%S'),float(cur_price[0])])
+            print(data)
             self.write(data)
 
     def write(self,data):
         postgres_insert_query = """ INSERT INTO stock_data (ticker,Day,Date,Price) VALUES (%s,%s,%s,%s)"""
-        record_to_insert = data
-        self.cursor.executemany(postgres_insert_query, record_to_insert)
+        self.cursor.executemany(postgres_insert_query, data)
         self.connection.commit()
         count = self.cursor.rowcount
         print (count, "Record inserted successfully into mobile table")
