@@ -7,6 +7,9 @@ from webdriver_manager.chrome import ChromeDriverManager
 import time
 from datetime import datetime
 import psycopg2
+import sys
+sys.path.append("../")
+from creden.credential import cred
 
 class crawler:
     def __init__(self,directory,user,password,host,port,database):
