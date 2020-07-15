@@ -38,7 +38,9 @@ class simulate:
             if dates < 5: # weekdays
                 temp = start_date
                 while temp <= start_date + timedelta(hours = 7, minutes = 30): # interval is # of times one wish to scan per hour
-                    cur_price = random.uniform(.98 * cur_price, 1.03 * cur_price) # 2% max change in price since aapl is large stock
+                    cur_price = (1 - (10 - random.randint(0,20))/100) * cur_price # 2% max change in price since aapl is large stock
+                    if cur_price < .6 * self.starting_price or cur_price > 3 * self.starting_price:
+                        cur_price = self.starting_price
                     prices.append(['AAPL',dates,str(temp),cur_price])
                     temp += minute_incre
             start_date += delta
@@ -51,4 +53,4 @@ class simulate:
         count = self.cursor.rowcount
         print (count, "Record inserted successfully into table")
 
-# simulate('2019-01-01-9-30','2019-12-30-9-30',144,12,'da','','localhost','5432','da')
+simulate('2019-01-01-9-30','2019-12-30-9-30',144,12,'da','','localhost','5432','da')
