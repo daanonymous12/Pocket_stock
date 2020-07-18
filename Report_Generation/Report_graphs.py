@@ -1,12 +1,12 @@
 import pandas as pd
 import psycopg2
-from io import BytesIO
 import matplotlib.pyplot as plt 
 import sys
+from matplotlib.backends.backend_pdf import PdfPages
+
 
 class queryandTransform:
     def __init__(self, start_date,end_date,ticker,user,password,host,port,database):
-        
         raw_data = self.query_data(start_date, end_date, ticker,user,password,host,port,database)
         self.data = self.data_feature(raw_data)
 
@@ -47,11 +47,32 @@ class graph(queryandTransform):
         self.ticker = ticker
         self.start = start_date
         self.end = end_date
-        self.output =  open(output_name,'wb')
-        # self.weekday()
-        # self.monthly()
-        print(self.data)
+        self.date = self.date_sep()
+        self.output =  PdfPages(output_name)
+        self.fig = plt.figure(figsize=(10,10))
+        self.graph_data()
+
+    def graph_data(self):
         self.price_movement()
+        self.price_change()
+        self.weekday()
+        # self.monthly()
+        print('Complete')
+        self.output.close()
+
+    def date_sep(self):
+        temp = (self.data['Date'].str.split('-').tolist())
+        return ['/'.join(i[1:]) for i in temp]
+
+    def price_change(self):
+        plt.plot(self.date,self.data['change'])
+        plt.text(0.05,0.95,'This Plot shows the changes in price with relation to the previous' +\
+            ' day',transform=self.fig.transFigure)
+        plt.xticks(fontsize=8, rotation=90)
+        plt.grid(True)
+        self.output.savefig()
+        plt.clf()
+        return 
 
     def hourly(self):
         pass
@@ -64,13 +85,15 @@ class graph(queryandTransform):
 
     def price_movement(self):
         # price movement for last week
-        temp = (self.data['Date'].str.split('-').tolist())
-        date = ['/'.join(i[1:]) for i in temp]
-        plt.plot(date,self.data['Price'])
+        plt.plot(self.date,self.data['Price'])
         plt.xticks(fontsize=8, rotation=90)
-        # img = BytesIO()
-        # plt.savefig(img,format = "png")
-        # self.output.write(img.getvalue())
+        plt.title('Price Movement')
+        txt = 'The price movement from ' + self.start + ' to ' + self.end 
+        plt.text(0.05,0.95,txt,transform=self.fig.transFigure)
+        plt.grid(True)
+        self.output.savefig()
+        plt.clf()
+        return 
+
 if __name__ == "__main__":
     graph(*sys.argv[1:])
-    
