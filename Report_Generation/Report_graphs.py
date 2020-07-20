@@ -4,11 +4,14 @@ import matplotlib.pyplot as plt
 import sys
 from matplotlib.backends.backend_pdf import PdfPages
 
+class transform:
+    def __init__(self,data):
+        self.raw = data 
+        self.data = self.update_data()
 
-class queryandTransform:
-    def __init__(self, start_date,end_date,ticker,user,password,host,port,database):
-        raw_data = self.query_data(start_date, end_date, ticker,user,password,host,port,database)
-        self.data = self.data_feature(raw_data)
+    def update_data(self):
+        data = self.data_feature(self.raw)
+        return data
 
     def data_feature(self, data):
         data = self.time_mod(data)
@@ -19,8 +22,14 @@ class queryandTransform:
     def time_mod(self,data):
         new_data = data.filter(['Day','Price'])
         temp = pd.DataFrame(data['Date'].str.split(' ').tolist())
+        print(temp,new_data)
         new_data['Date'],new_data['Time'] = temp[0],temp[1]
         return new_data 
+
+class query(transform):
+    def __init__(self, start_date,end_date,ticker,user,password,host,port,database):
+        raw_data = self.query_data(start_date, end_date, ticker,user,password,host,port,database)
+        super().__init__(raw_data)
 
     def query_data(self, start_date, end_date, ticker,user,password,host,port,database):
         self.connection = psycopg2.connect(user = user,
@@ -39,7 +48,7 @@ class queryandTransform:
         data['Price'] = data['Price'].round(2)
         return data
 
-class graph(queryandTransform):
+class graph(query):
 
     def __init__(self,output_name,start_date,end_date,ticker,user,password,host,port,database):
         super().__init__(start_date,end_date,ticker,user,password,host,port,database)
