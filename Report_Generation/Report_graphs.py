@@ -11,7 +11,6 @@ class queryandTransform:
         self.data = self.data_feature(raw_data)
 
     def data_feature(self, data):
-        # add diff
         data = self.time_mod(data)
         data['change'] = data['Price'].diff()
         data['change'].loc[0] = 0
@@ -47,7 +46,7 @@ class graph(queryandTransform):
         self.ticker = ticker
         self.start = start_date
         self.end = end_date
-        self.date = self.date_sep()
+        self.date = self.date_sep(self.data)
         self.output =  PdfPages(output_name)
         self.fig = plt.figure(figsize=(10,10))
         self.graph_data()
@@ -56,41 +55,97 @@ class graph(queryandTransform):
         self.price_movement()
         self.price_change()
         self.weekday()
-        # self.monthly()
+        self.date_graph()
+        self.monthly()
+        self.hourly()
         print('Complete')
         self.output.close()
 
-    def date_sep(self):
-        temp = (self.data['Date'].str.split('-').tolist())
+    def date_sep(self,data):
+        temp = (data['Date'].str.split('-').tolist())
         return ['/'.join(i[1:]) for i in temp]
 
     def price_change(self):
         plt.plot(self.date,self.data['change'])
         plt.text(0.05,0.95,'This Plot shows the changes in price with relation to the previous' +\
             ' day',transform=self.fig.transFigure)
-        plt.xticks(fontsize=8, rotation=90)
-        plt.grid(True)
+        plt.xlabel('Date')
+        plt.ylabel('Price($) change with relation to previous day')
+        plt.xticks(fontsize = 8, rotation = 90)
         self.output.savefig()
         plt.clf()
         return 
 
+    def date_graph(self):
+        temp_data = self.data.groupby('Day', as_index = False ).mean()
+        # plt.xticks(fontsize=8, rotation=90)
+        plt.bar(temp_data['Day'],temp_data['change'], align = 'center')
+        plt.xticks(range(5),['Monday','Tuesday','Wednesday','Thursday','Friday'],rotation = 'vertical')
+        plt.title('Trend in of change of stock price with day of week')
+        plt.xlabel('Day of the week')
+        plt.ylabel('Average Price Change($)')
+        self.output.savefig()
+        plt.clf()
+        return 
+
+    def sep_time(self,data,separator,param,new_name,return_index):
+        temp  = (data[param].str.split(separator).tolist())
+        data[new_name] = [value[return_index] for value in temp]
+        return data
+
     def hourly(self):
-        pass
+        new_data = self.sep_time(self.data,':','Time','hour',0)
+        new_data = new_data.groupby('hour', as_index = False).mean()
+        plt.title('Average Hourly Price Change')
+        plt.xticks(fontsize=8, rotation=90)
+        txt = 'The average price change for each hour between ' + self.start + ' and ' + self.end 
+        plt.xlabel('Date')
+        plt.ylabel('Average Hourly Price($)')
+        plt.text(0.1, 0.95, txt, transform = self.fig.transFigure)
+        plt.bar(new_data['hour'],new_data['change'], align = 'center')
+        plt.xticks(range(len(new_data['hour'])),[i for i in new_data['hour']],rotation = 'vertical')
+        self.output.savefig()
+        plt.clf()
+        return 
 
     def monthly(self):
-        pass
+        new_data = self.sep_time(self.data,'-','Date','month',1)
+        new_data = new_data.groupby('month',as_index = False).mean()
+        plt.title('Average Monthly price Increment')
+        plt.xticks(fontsize=8, rotation=90)
+        txt = 'The average price change per month between ' + self.start + ' and ' + self.end 
+        plt.xlabel('Date')
+        plt.bar(new_data['month'],new_data['change'], align = 'center')
+        plt.xticks(range(len(new_data['month'])),[i for i in new_data['month']],rotation = 'vertical')
+        plt.ylabel('Average Monthly Price($)')
+        plt.text(0.1, 0.95, txt, transform = self.fig.transFigure)
+        self.output.savefig()
+        plt.clf()
+        return
 
     def weekday(self):
-        pass 
+        temp_data = self.data.groupby('Date', as_index = False ).mean()
+        plt.title('Daily price movement')
+        plt.xticks(fontsize=8, rotation=90)
+        txt = 'The average price change per day between ' + self.start + ' and ' + self.end 
+        plt.xlabel('Date')
+        plt.ylabel('Average Daily Price($)')
+        plt.text(0.05,0.95,txt,transform=self.fig.transFigure)
+        plt.plot(self.date_sep(temp_data),temp_data['Price'])
+        self.output.savefig()
+        plt.clf()
+        return
+        
 
     def price_movement(self):
         # price movement for last week
         plt.plot(self.date,self.data['Price'])
         plt.xticks(fontsize=8, rotation=90)
-        plt.title('Price Movement')
+        plt.title('In depth Price Movement')
+        plt.xlabel('Date')
+        plt.ylabel('Price($)')
         txt = 'The price movement from ' + self.start + ' to ' + self.end 
         plt.text(0.05,0.95,txt,transform=self.fig.transFigure)
-        plt.grid(True)
         self.output.savefig()
         plt.clf()
         return 
