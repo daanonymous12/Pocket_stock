@@ -6,11 +6,10 @@ from matplotlib.backends.backend_pdf import PdfPages
 
 class transform:
     def __init__(self,data):
-        self.raw = data 
-        self.data = self.update_data()
+        self.data = self.update_data(data)
 
-    def update_data(self):
-        data = self.data_feature(self.raw)
+    def update_data(self,data):
+        data = self.data_feature(data)
         return data
 
     def data_feature(self, data):
@@ -70,94 +69,110 @@ class graph(query):
         print('Complete')
         self.output.close()
 
+
     def date_sep(self,data):
         temp = (data['Date'].str.split('-').tolist())
         return ['/'.join(i[1:]) for i in temp]
 
     def price_change(self):
-        plt.plot(self.date,self.data['change'])
-        plt.text(0.05,0.95,'This Plot shows the changes in price with relation to the previous' +\
-            ' day',transform=self.fig.transFigure)
-        plt.xlabel('Date')
-        plt.ylabel('Price($) change with relation to previous day')
-        plt.xticks(fontsize = 8, rotation = 90)
-        self.output.savefig()
-        plt.clf()
+        xlabels = 'Date'
+        ylabels = 'Price($) change with relation to previous day'
+        msg = 'This Plot shows the changes in price with relation to the previous day'
+        self.normal_graph('Price Change', self.date,self.data['change'],msg,xlabels,ylabels)
         return 
 
     def date_graph(self):
         temp_data = self.data.groupby('Day', as_index = False ).mean()
-        # plt.xticks(fontsize=8, rotation=90)
-        plt.bar(temp_data['Day'],temp_data['change'], align = 'center')
-        plt.xticks(range(5),['Monday','Tuesday','Wednesday','Thursday','Friday'],rotation = 'vertical')
-        plt.title('Trend in of change of stock price with day of week')
-        plt.xlabel('Day of the week')
-        plt.ylabel('Average Price Change($)')
+        bar_x = temp_data['Day']
+        bar_y = temp_data['change']
+        xticks_range = range(5)
+        xticks_data = ['Monday','Tuesday','Wednesday','Thursday','Friday']
+        name = 'Trend in of change of stock price with day of week'
+        xlabels = 'Day of the week'
+        ylabels = 'Average Price Change($)'
+        self.bar_graph(name,xlabels,ylabels,bar_x,bar_y,xticks_range,xticks_data,'')
+        return 
+
+    def normal_graph(self,name,plot_x,plot_y,text_msg,xlabels,ylabels):
+        plt.plot(plot_x,plot_y)
+        plt.text(.05,.95,text_msg,transform=self.fig.transFigure)
+        plt.xlabel(xlabels)
+        plt.title(name)
+        plt.ylabel(ylabels)
+        plt.xticks(fontsize = 8, rotation = 90)
+        plt.title(name)
         self.output.savefig()
         plt.clf()
+        print(name + ' finished')
         return 
 
     def sep_time(self,data,separator,param,new_name,return_index):
         temp  = (data[param].str.split(separator).tolist())
         data[new_name] = [value[return_index] for value in temp]
         return data
-
+    
     def hourly(self):
         new_data = self.sep_time(self.data,':','Time','hour',0)
         new_data = new_data.groupby('hour', as_index = False).mean()
-        plt.title('Average Hourly Price Change')
-        plt.xticks(fontsize=8, rotation=90)
+        name = 'Average Hourly Price Change'
         txt = 'The average price change for each hour between ' + self.start + ' and ' + self.end 
-        plt.xlabel('Date')
-        plt.ylabel('Average Hourly Price($)')
-        plt.text(0.1, 0.95, txt, transform = self.fig.transFigure)
-        plt.bar(new_data['hour'],new_data['change'], align = 'center')
-        plt.xticks(range(len(new_data['hour'])),[i for i in new_data['hour']],rotation = 'vertical')
-        self.output.savefig()
-        plt.clf()
+        xlabels = 'Hour'
+        ylabels = 'Average Hourly Price($)'
+        bar_x = new_data['hour']
+        bar_y = new_data['change']
+        x_range = range(len(new_data['hour']))
+        x_data = [i for i in new_data['hour']]
+        self.bar_graph(name,xlabels,ylabels,bar_x,bar_y,x_range,x_data,txt)
         return 
 
     def monthly(self):
         new_data = self.sep_time(self.data,'-','Date','month',1)
         new_data = new_data.groupby('month',as_index = False).mean()
-        plt.title('Average Monthly price Increment')
-        plt.xticks(fontsize=8, rotation=90)
+        name = 'Average Monthly price Increment'
         txt = 'The average price change per month between ' + self.start + ' and ' + self.end 
-        plt.xlabel('Date')
-        plt.bar(new_data['month'],new_data['change'], align = 'center')
-        plt.xticks(range(len(new_data['month'])),[i for i in new_data['month']],rotation = 'vertical')
-        plt.ylabel('Average Monthly Price($)')
+        xlabels = 'Month'
+        bar_x = new_data['month']
+        bar_y = new_data['change']
+        xtick_range = range(len(new_data['month']))
+        xtick_data = [i for i in new_data['month']]
+        ylabels = 'Average Monthly Price($)'
+        self.bar_graph(name, xlabels, ylabels,bar_x,bar_y,xtick_range,xtick_data, txt)
+        return
+
+    def bar_graph(self,name, x_name,y_name, bar_x,bar_y,xtick_range,xtick_data,txt):
+        plt.text(.05,.95,txt,transform=self.fig.transFigure)
+        plt.bar(bar_x,bar_y, align = 'center')
+        plt.ylabel(y_name)
+        plt.xlabel(x_name)
+        plt.title(name)
+        plt.xticks(xtick_range,xtick_data,rotation = 'vertical')
         plt.text(0.1, 0.95, txt, transform = self.fig.transFigure)
         self.output.savefig()
         plt.clf()
+        print(name + ' complete')
         return
+        
 
     def weekday(self):
         temp_data = self.data.groupby('Date', as_index = False ).mean()
-        plt.title('Daily price movement')
-        plt.xticks(fontsize=8, rotation=90)
         txt = 'The average price change per day between ' + self.start + ' and ' + self.end 
-        plt.xlabel('Date')
-        plt.ylabel('Average Daily Price($)')
-        plt.text(0.05,0.95,txt,transform=self.fig.transFigure)
-        plt.plot(self.date_sep(temp_data),temp_data['Price'])
-        self.output.savefig()
-        plt.clf()
+        xlabels = 'Date'
+        ylabels = 'Average Daily Price($)'
+        plot_x = self.date_sep(temp_data)
+        plot_y = temp_data['Price']
+        self.normal_graph('Daily price movement',plot_x,plot_y,txt,xlabels,ylabels)
         return
         
 
     def price_movement(self):
         # price movement for last week
-        plt.plot(self.date,self.data['Price'])
-        plt.xticks(fontsize=8, rotation=90)
-        plt.title('In depth Price Movement')
-        plt.xlabel('Date')
-        plt.ylabel('Price($)')
+        plot_x = self.date
+        plot_y = self.data['Price']
+        xlabels = 'Date'
+        ylabels = 'Price($)'
         txt = 'The price movement from ' + self.start + ' to ' + self.end 
-        plt.text(0.05,0.95,txt,transform=self.fig.transFigure)
-        self.output.savefig()
-        plt.clf()
-        return 
+        self.normal_graph('In depth Price Movement',plot_x,plot_y,txt,xlabels,ylabels)
+        return
 
 if __name__ == "__main__":
     graph(*sys.argv[1:])
