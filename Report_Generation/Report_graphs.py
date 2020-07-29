@@ -21,7 +21,6 @@ class transform:
     def time_mod(self,data):
         new_data = data.filter(['Day','Price'])
         temp = pd.DataFrame(data['Date'].str.split(' ').tolist())
-        print(temp,new_data)
         new_data['Date'],new_data['Time'] = temp[0],temp[1]
         return new_data 
 
