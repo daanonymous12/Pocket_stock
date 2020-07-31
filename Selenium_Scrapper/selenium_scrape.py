@@ -52,5 +52,5 @@ class crawler(connect_db):
         count = self.cursor.rowcount
         print (count, "Record inserted successfully into table")
 
-a = crawler('/Users/da/Documents/GitHub/pocket_stock/Mock_Data/Nasdaq_tickers.csv')
-a.craw(0,1)
+# a = crawler('/Users/da/Documents/GitHub/pocket_stock/Mock_Data/Nasdaq_tickers.csv')
+# a.craw(0,1)
