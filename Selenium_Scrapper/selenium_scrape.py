@@ -9,22 +9,13 @@ from datetime import datetime
 import psycopg2
 import sys
 sys.path.append("../")
-from creden.credential import cred
+from creden.connect_db import connect_db
 
-class crawler:
-    def __init__(self,directory,user,password,host,port,database):
+class crawler(connect_db):
+    def __init__(self,directory):
         self.company_list = self.open_name(directory)
         self.date = datetime.today().weekday() # Monday is 0, sunday is 6
-        self.cursor = self.database(user,password,host,port,database)
-
-    def database(self,user,password,host,port,database):
-        self.connection = psycopg2.connect(user = user,
-                                  password = password,
-                                  host = host,
-                                  port = port,
-                                  database = database)
-        cursor = self.connection.cursor()
-        return cursor
+        super().__init__()
 
     def open_name(self,directory):
         csv = pd.read_csv(directory)
@@ -37,7 +28,7 @@ class crawler:
         driver = webdriver.Chrome(ChromeDriverManager().install(),chrome_options=options)
         return driver
 
-    def crawler(self, waittime, frequency):
+    def craw(self, waittime, frequency):
         driver = self.driver_param()
         while True:
             data = []
@@ -59,7 +50,7 @@ class crawler:
         self.cursor.executemany(postgres_insert_query, data)
         self.connection.commit()
         count = self.cursor.rowcount
-        print (count, "Record inserted successfully into mobile table")
+        print (count, "Record inserted successfully into table")
 
-a = crawler('/Users/da/Documents/GitHub/auto_crawler/Mock_Data/Nasdaq_tickers.csv','da','','localhost','5432','da')
-a.crawler(0,1)
+# a = crawler('/Users/da/Documents/GitHub/pocket_stock/Mock_Data/Nasdaq_tickers.csv')
+# a.craw(0,1)
